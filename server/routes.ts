@@ -107,52 +107,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // POST /generate-blog - Generate blog content only
-  app.post("/api/generate-blog", async (req, res) => {
-    try {
-      const { update_text } = req.body;
-      
-      if (!update_text || typeof update_text !== 'string') {
-        return res.status(400).json({ 
-          error: "Missing or invalid update_text field" 
-        });
-      }
-
-      const { aiServices } = await import("./ai-services");
-      const result = await aiServices.generateBlogText(update_text);
-      
-      res.json(result);
-    } catch (error) {
-      console.error('Error generating blog content:', error);
-      res.status(500).json({ 
-        error: "Failed to generate blog content" 
-      });
-    }
-  });
-
-  // POST /generate-linkedin - Generate LinkedIn content only
-  app.post("/api/generate-linkedin", async (req, res) => {
-    try {
-      const { update_text } = req.body;
-      
-      if (!update_text || typeof update_text !== 'string') {
-        return res.status(400).json({ 
-          error: "Missing or invalid update_text field" 
-        });
-      }
-
-      const { aiServices } = await import("./ai-services");
-      const result = await aiServices.generateLinkedInText(update_text);
-      
-      res.json(result);
-    } catch (error) {
-      console.error('Error generating LinkedIn content:', error);
-      res.status(500).json({ 
-        error: "Failed to generate LinkedIn content" 
-      });
-    }
-  });
-
   // GET /health - Simple health check
   app.get("/api/health", (req, res) => {
     res.json({ 
