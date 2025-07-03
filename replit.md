@@ -1,8 +1,8 @@
-# Appear - Modern Web Starter Application
+# Founder Update Content Generator
 
 ## Overview
 
-Appear is a modern web application starter template built with React and Express. It provides a foundation for building responsive web applications with a clean, professional design and robust architecture. The application follows a monorepo structure with a clear separation between frontend and backend code.
+A specialized AI-powered web application that transforms founder updates into engaging content. The system analyzes founder update text using xAI's Grok model to suggest optimal content format (image or video), then generates blog posts, LinkedIn content, and visual assets using multiple AI services. Built with React frontend and Express backend for rapid MVP deployment.
 
 ## System Architecture
 
