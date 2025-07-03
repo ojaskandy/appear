@@ -201,52 +201,40 @@ export default function Home() {
             {suggestion && (
               <div className="w-full max-w-3xl mt-8">
                 <div className="bg-[#2a2a2a] border border-gray-700 rounded-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center">
-                        <CheckCircle className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-white font-medium">AI Analysis Complete</h3>
-                        <p className="text-gray-400 text-sm">Content type suggestion ready</p>
-                      </div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-3 h-3 text-white" />
                     </div>
+                    <span className="text-white font-medium">
+                      Recommended: {suggestion.suggestion === 'image' ? 'Infographic' : 'Video'}
+                    </span>
                   </div>
                   
-                  <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg p-4 mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
-                        Recommended: {suggestion.suggestion === 'image' ? 'Infographic' : 'Explainer Video'}
-                      </Badge>
-                    </div>
-                    <p className="text-gray-300 text-sm leading-relaxed">{suggestion.reasoning}</p>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3 mb-6">
+                  <div className="grid grid-cols-2 gap-3 mb-4">
                     <Button
                       variant={selectedChoice === 'image' ? 'default' : 'outline'}
                       onClick={() => setSelectedChoice('image')}
                       disabled={isGenerating}
-                      className={`h-12 ${
+                      className={`h-10 ${
                         selectedChoice === 'image' 
-                          ? 'bg-cyan-500 hover:bg-cyan-600 text-white border-cyan-500' 
-                          : 'bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800 hover:border-cyan-500'
+                          ? 'bg-cyan-500 hover:bg-cyan-600 text-white' 
+                          : 'bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800'
                       }`}
                     >
-                      <Image className="w-5 h-5 mr-3" />
+                      <Image className="w-4 h-4 mr-2" />
                       Generate Infographic
                     </Button>
                     <Button
                       variant={selectedChoice === 'video' ? 'default' : 'outline'}
                       onClick={() => setSelectedChoice('video')}
                       disabled={isGenerating}
-                      className={`h-12 ${
+                      className={`h-10 ${
                         selectedChoice === 'video' 
-                          ? 'bg-cyan-500 hover:bg-cyan-600 text-white border-cyan-500' 
-                          : 'bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800 hover:border-cyan-500'
+                          ? 'bg-cyan-500 hover:bg-cyan-600 text-white' 
+                          : 'bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800'
                       }`}
                     >
-                      <Video className="w-5 h-5 mr-3" />
+                      <Video className="w-4 h-4 mr-2" />
                       Create Video
                     </Button>
                   </div>
@@ -254,16 +242,16 @@ export default function Home() {
                   <Button 
                     onClick={handleGenerate}
                     disabled={isGenerating || !selectedChoice}
-                    className="w-full h-12 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-medium"
+                    className="w-full h-10 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-medium"
                   >
                     {isGenerating ? (
                       <>
-                        <Loader2 className="w-5 h-5 mr-3 animate-spin" />
-                        Generating Content...
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generate All Content
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-5 h-5 mr-3" />
+                        <Sparkles className="w-4 h-4 mr-2" />
                         Generate All Content
                       </>
                     )}

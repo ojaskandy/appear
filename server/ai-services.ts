@@ -1,5 +1,6 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import OpenAI from "openai";
+import RunwayML from '@runwayml/sdk';
 import * as fs from "fs";
 import * as path from "path";
 import { modelSelector, type ModelRecommendation } from "./model-selector";
@@ -11,6 +12,12 @@ const xai = new OpenAI({
   apiKey: process.env.XAI_API_KEY || "" 
 });
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
+const runway = new RunwayML({ apiKey: process.env.RUNWAY_API_KEY });
+
+// Check if Runway API is available
+const isRunwayAvailable = () => {
+  return !!process.env.RUNWAY_API_KEY;
+};
 
 export interface ContentSuggestion {
   suggestion: 'image' | 'video';
@@ -342,13 +349,69 @@ Style requirements:
 
       console.log('Generating explainer video for:', updateText);
       
-      // Note: Runway ML API integration would go here
-      // For MVP, we'll return a placeholder since Runway ML API is not yet publicly available
-      // In a real implementation, this would call Runway ML API
+      // Check if Runway API is available
+      if (!isRunwayAvailable()) {
+        console.log('Runway API key not available, using placeholder');
+        return {
+          url: '/placeholder-video.mp4',
+          model_used: 'runway-gen-3 (placeholder - API key needed)'
+        };
+      }
+
+      // Use Runway ML API for video generation
+      if (recommendation.primary_model.provider === 'runway') {
+        const prompt = `Create a professional explainer video based on this founder update: ${updateText}
+
+Video style requirements:
+- Professional, clean aesthetic
+- Modern business presentation style
+- Clear visual storytelling
+- Engaging transitions and motion
+- Suitable for startup/business context
+- Duration: 5-10 seconds`;
+
+        try {
+          const task = await runway.textToVideo.create({
+            model: 'gen3a_turbo',
+            promptText: prompt,
+            ratio: '16:9',
+            duration: 5
+          }).waitForTaskOutput();
+
+          if (task.output && task.output.length > 0) {
+            // Save video to uploads directory
+            const uploadsDir = path.join(process.cwd(), 'uploads');
+            if (!fs.existsSync(uploadsDir)) {
+              fs.mkdirSync(uploadsDir, { recursive: true });
+            }
+
+            const filename = `explainer_${Date.now()}.mp4`;
+            const filepath = path.join(uploadsDir, filename);
+            
+            // Download and save video
+            const response = await fetch(task.output[0]);
+            const buffer = await response.arrayBuffer();
+            fs.writeFileSync(filepath, Buffer.from(buffer));
+            
+            return {
+              url: `/uploads/${filename}`,
+              model_used: 'gen3a_turbo'
+            };
+          }
+        } catch (runwayError) {
+          console.error('Runway API error:', runwayError);
+          // Fallback to placeholder
+          return {
+            url: '/placeholder-video.mp4',
+            model_used: 'runway-gen-3 (API error - check credits/permissions)'
+          };
+        }
+      }
       
+      // Fallback to placeholder for non-Runway models
       return {
         url: '/placeholder-video.mp4',
-        model_used: recommendation.primary_model.model
+        model_used: recommendation.primary_model.model + ' (placeholder)'
       };
     } catch (error) {
       console.error('Error generating explainer video:', error);
