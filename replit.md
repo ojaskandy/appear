@@ -102,4 +102,8 @@ Preferred communication style: Simple, everyday language.
 ## Changelog
 
 Changelog:
-- July 03, 2025. Initial setup
+- July 03, 2025. Redesigned to exact Perplexity-style interface with dark theme and sidebar
+- Added smart model selection system with xAI analyzing tasks to choose optimal AI models
+- Integrated multi-provider AI system (xAI, Gemini, ready for OpenAI, Anthropic, Runway ML)
+- Enhanced UI with professional card layouts and model tracking display
+- Added /api/models and /api/recommend endpoints for model intelligence

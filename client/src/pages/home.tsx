@@ -120,112 +120,150 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <div className="border-b border-gray-800">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-center space-x-2">
-            <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">A</span>
-            </div>
-            <h1 className="text-2xl font-semibold">appear</h1>
-            <Badge variant="secondary" className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
-              pro
-            </Badge>
+    <div className="min-h-screen bg-[#1a1a1a] text-white flex flex-col">
+      {/* Sidebar */}
+      <div className="fixed left-0 top-0 bottom-0 w-16 bg-[#1a1a1a] border-r border-gray-800 flex flex-col items-center py-4">
+        <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mb-6">
+          <span className="text-black font-bold text-sm">A</span>
+        </div>
+        <div className="flex flex-col space-y-4 text-gray-400">
+          <div className="p-2 hover:bg-gray-800 rounded-lg cursor-pointer">
+            <Search className="w-5 h-5" />
+          </div>
+          <div className="p-2 hover:bg-gray-800 rounded-lg cursor-pointer">
+            <FileText className="w-5 h-5" />
+          </div>
+          <div className="p-2 hover:bg-gray-800 rounded-lg cursor-pointer">
+            <Share2 className="w-5 h-5" />
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="ml-16 flex flex-col flex-1">
         {!generatedContent ? (
-          <div className="max-w-2xl mx-auto">
+          <div className="flex flex-col items-center justify-center flex-1 px-4">
+            {/* Logo */}
+            <div className="mb-12">
+              <h1 className="text-4xl font-light text-white">appear</h1>
+            </div>
+
             {/* Input Section */}
-            <div className="mb-8">
+            <div className="w-full max-w-3xl">
               <div className="relative">
-                <Textarea
-                  placeholder="Share your founder update or company milestone..."
-                  value={updateText}
-                  onChange={(e) => setUpdateText(e.target.value)}
-                  className="min-h-[120px] bg-gray-800 border-gray-700 text-white placeholder-gray-400 resize-none focus:border-cyan-500 focus:ring-cyan-500"
-                  disabled={isAnalyzing || isGenerating}
-                />
-                <div className="absolute bottom-4 right-4 flex items-center space-x-2">
-                  <Button
-                    onClick={handleAnalyze}
-                    disabled={isAnalyzing || isGenerating || !updateText.trim()}
-                    size="sm"
-                    className="bg-cyan-500 hover:bg-cyan-600 text-white"
-                  >
-                    {isAnalyzing ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Search className="w-4 h-4" />
-                    )}
-                  </Button>
+                <div className="bg-[#2a2a2a] border border-gray-700 rounded-xl overflow-hidden">
+                  <Textarea
+                    placeholder="Share your founder update or company milestone..."
+                    value={updateText}
+                    onChange={(e) => setUpdateText(e.target.value)}
+                    className="min-h-[60px] bg-transparent border-0 text-white placeholder-gray-400 resize-none focus:ring-0 p-4 pr-16"
+                    disabled={isAnalyzing || isGenerating}
+                  />
+                  <div className="absolute right-3 bottom-3 flex items-center space-x-2">
+                    <Button
+                      onClick={handleAnalyze}
+                      disabled={isAnalyzing || isGenerating || !updateText.trim()}
+                      size="sm"
+                      className="bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg w-8 h-8 p-0"
+                    >
+                      {isAnalyzing ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Search className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="flex justify-center mt-6 space-x-2">
+                <Button variant="outline" size="sm" className="bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generate Content
+                </Button>
+                <Button variant="outline" size="sm" className="bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800">
+                  <Image className="w-4 h-4 mr-2" />
+                  Create Visual
+                </Button>
+                <Button variant="outline" size="sm" className="bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800">
+                  <Video className="w-4 h-4 mr-2" />
+                  Make Video
+                </Button>
+                <Button variant="outline" size="sm" className="bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Blog Post
+                </Button>
               </div>
             </div>
 
             {/* Suggestion Section */}
             {suggestion && (
-              <div className="mb-8">
-                <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <CheckCircle className="w-5 h-5 text-cyan-500" />
-                    <span className="text-cyan-500 font-medium">AI Analysis Complete</span>
+              <div className="w-full max-w-3xl mt-8">
+                <div className="bg-[#2a2a2a] border border-gray-700 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center">
+                        <CheckCircle className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-medium">AI Analysis Complete</h3>
+                        <p className="text-gray-400 text-sm">Content type suggestion ready</p>
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="mb-4">
-                    <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 mb-2">
-                      Recommended: {suggestion.suggestion === 'image' ? 'Infographic' : 'Explainer Video'}
-                    </Badge>
-                    <p className="text-gray-300 text-sm">{suggestion.reasoning}</p>
+                  <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg p-4 mb-6">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
+                        Recommended: {suggestion.suggestion === 'image' ? 'Infographic' : 'Explainer Video'}
+                      </Badge>
+                    </div>
+                    <p className="text-gray-300 text-sm leading-relaxed">{suggestion.reasoning}</p>
                   </div>
                   
-                  <div className="flex gap-3 mb-4">
+                  <div className="grid grid-cols-2 gap-3 mb-6">
                     <Button
                       variant={selectedChoice === 'image' ? 'default' : 'outline'}
                       onClick={() => setSelectedChoice('image')}
                       disabled={isGenerating}
-                      className={`flex-1 ${
+                      className={`h-12 ${
                         selectedChoice === 'image' 
-                          ? 'bg-cyan-500 hover:bg-cyan-600 text-white' 
-                          : 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                          ? 'bg-cyan-500 hover:bg-cyan-600 text-white border-cyan-500' 
+                          : 'bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800 hover:border-cyan-500'
                       }`}
                     >
-                      <Image className="w-4 h-4 mr-2" />
-                      Infographic
+                      <Image className="w-5 h-5 mr-3" />
+                      Generate Infographic
                     </Button>
                     <Button
                       variant={selectedChoice === 'video' ? 'default' : 'outline'}
                       onClick={() => setSelectedChoice('video')}
                       disabled={isGenerating}
-                      className={`flex-1 ${
+                      className={`h-12 ${
                         selectedChoice === 'video' 
-                          ? 'bg-cyan-500 hover:bg-cyan-600 text-white' 
-                          : 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                          ? 'bg-cyan-500 hover:bg-cyan-600 text-white border-cyan-500' 
+                          : 'bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800 hover:border-cyan-500'
                       }`}
                     >
-                      <Video className="w-4 h-4 mr-2" />
-                      Video
+                      <Video className="w-5 h-5 mr-3" />
+                      Create Video
                     </Button>
                   </div>
                   
                   <Button 
                     onClick={handleGenerate}
                     disabled={isGenerating || !selectedChoice}
-                    className="w-full bg-cyan-500 hover:bg-cyan-600 text-white"
-                    size="lg"
+                    className="w-full h-12 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-medium"
                   >
                     {isGenerating ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        <Loader2 className="w-5 h-5 mr-3 animate-spin" />
                         Generating Content...
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4 mr-2" />
+                        <Sparkles className="w-5 h-5 mr-3" />
                         Generate All Content
                       </>
                     )}
@@ -233,88 +271,102 @@ export default function Home() {
                 </div>
               </div>
             )}
-
-            {/* Quick Actions */}
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 text-center">
-                <FileText className="w-6 h-6 text-cyan-500 mx-auto mb-2" />
-                <p className="text-sm text-gray-300">Generate blog posts</p>
-              </div>
-              <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 text-center">
-                <Share2 className="w-6 h-6 text-cyan-500 mx-auto mb-2" />
-                <p className="text-sm text-gray-300">Create social content</p>
-              </div>
-            </div>
           </div>
         ) : (
           /* Generated Content Display */
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Generated Content</h2>
-              <Button
-                variant="outline"
-                onClick={handleReset}
-                className="border-gray-600 text-gray-300 hover:bg-gray-700"
-              >
-                New Update
-              </Button>
-            </div>
+          <div className="flex-1 px-4 py-8">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-light text-white">Generated Content</h2>
+                <Button
+                  variant="outline"
+                  onClick={handleReset}
+                  className="bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800"
+                >
+                  New Update
+                </Button>
+              </div>
 
-            {/* Blog Post */}
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-cyan-500" />
-                <h3 className="text-lg font-medium">Blog Post</h3>
-              </div>
-              <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
-                <p className="whitespace-pre-wrap text-sm text-gray-300">{generatedContent.blog_text}</p>
-              </div>
-            </div>
-
-            {/* LinkedIn Post */}
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Share2 className="w-5 h-5 text-cyan-500" />
-                <h3 className="text-lg font-medium">LinkedIn Post</h3>
-              </div>
-              <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
-                <p className="whitespace-pre-wrap text-sm text-gray-300">{generatedContent.linkedin_text}</p>
-              </div>
-            </div>
-
-            {/* Generated Image */}
-            {generatedContent.image_url && (
-              <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Image className="w-5 h-5 text-cyan-500" />
-                  <h3 className="text-lg font-medium">Generated Infographic</h3>
+              <div className="grid gap-6">
+                {/* Blog Post */}
+                <div className="bg-[#2a2a2a] border border-gray-700 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-medium">Blog Post</h3>
+                      <p className="text-gray-400 text-sm">Generated with xAI Grok</p>
+                    </div>
+                  </div>
+                  <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg p-6">
+                    <p className="whitespace-pre-wrap text-gray-300 leading-relaxed">{generatedContent.blog_text}</p>
+                  </div>
                 </div>
-                <img 
-                  src={generatedContent.image_url} 
-                  alt="Generated infographic"
-                  className="w-full max-w-md mx-auto rounded-lg border border-gray-700"
-                />
-              </div>
-            )}
 
-            {/* Generated Video */}
-            {generatedContent.video_url && (
-              <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Video className="w-5 h-5 text-cyan-500" />
-                  <h3 className="text-lg font-medium">Generated Video</h3>
+                {/* LinkedIn Post */}
+                <div className="bg-[#2a2a2a] border border-gray-700 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                      <Share2 className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-medium">LinkedIn Post</h3>
+                      <p className="text-gray-400 text-sm">Generated with xAI Grok</p>
+                    </div>
+                  </div>
+                  <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg p-6">
+                    <p className="whitespace-pre-wrap text-gray-300 leading-relaxed">{generatedContent.linkedin_text}</p>
+                  </div>
                 </div>
-                <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 text-center">
-                  <Video className="w-16 h-16 mx-auto mb-4 text-gray-500" />
-                  <p className="text-gray-400">
-                    Video placeholder - Runway ML integration ready
-                  </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    URL: {generatedContent.video_url}
-                  </p>
-                </div>
+
+                {/* Generated Image */}
+                {generatedContent.image_url && (
+                  <div className="bg-[#2a2a2a] border border-gray-700 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                        <Image className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-medium">Generated Infographic</h3>
+                        <p className="text-gray-400 text-sm">Created with Gemini AI</p>
+                      </div>
+                    </div>
+                    <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg p-4">
+                      <img 
+                        src={generatedContent.image_url} 
+                        alt="Generated infographic"
+                        className="w-full max-w-lg mx-auto rounded-lg"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Generated Video */}
+                {generatedContent.video_url && (
+                  <div className="bg-[#2a2a2a] border border-gray-700 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                        <Video className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-medium">Generated Video</h3>
+                        <p className="text-gray-400 text-sm">Ready for Runway ML</p>
+                      </div>
+                    </div>
+                    <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg p-8 text-center">
+                      <Video className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+                      <p className="text-gray-400">
+                        Video placeholder - Runway ML integration ready
+                      </p>
+                      <p className="text-sm text-gray-500 mt-2">
+                        URL: {generatedContent.video_url}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         )}
       </div>

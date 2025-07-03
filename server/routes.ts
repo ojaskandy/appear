@@ -58,6 +58,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /models - Get available models and recommendations
+  app.get("/api/models", async (req, res) => {
+    try {
+      const { modelSelector } = await import("./model-selector");
+      const availableModels = modelSelector.getAvailableModels();
+      
+      res.json({
+        available_models: availableModels,
+        providers: {
+          xai: !!process.env.XAI_API_KEY,
+          gemini: !!process.env.GEMINI_API_KEY,
+          openai: !!process.env.OPENAI_API_KEY,
+          anthropic: !!process.env.ANTHROPIC_API_KEY,
+          runway: !!process.env.RUNWAY_API_KEY
+        }
+      });
+    } catch (error) {
+      console.error('Error getting models:', error);
+      res.status(500).json({ error: "Failed to get available models" });
+    }
+  });
+
+  // POST /recommend - Get model recommendations for a task
+  app.post("/api/recommend", async (req, res) => {
+    try {
+      const { task_description } = req.body;
+      
+      if (!task_description || typeof task_description !== 'string') {
+        return res.status(400).json({ 
+          error: "Missing or invalid task_description field" 
+        });
+      }
+
+      const { modelSelector } = await import("./model-selector");
+      const task = await modelSelector.analyzeTask(task_description);
+      const recommendations = await modelSelector.getMultipleOptions(task, 3);
+      
+      res.json({
+        task_analysis: task,
+        recommendations: recommendations
+      });
+    } catch (error) {
+      console.error('Error getting recommendations:', error);
+      res.status(500).json({ 
+        error: "Failed to get model recommendations" 
+      });
+    }
+  });
+
   // GET /health - Simple health check
   app.get("/api/health", (req, res) => {
     res.json({ 

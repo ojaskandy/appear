@@ -2,6 +2,7 @@ import { GoogleGenAI, Modality } from "@google/genai";
 import OpenAI from "openai";
 import * as fs from "fs";
 import * as path from "path";
+import { modelSelector, type ModelRecommendation } from "./model-selector";
 
 // Initialize AI clients
 const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
@@ -9,6 +10,7 @@ const xai = new OpenAI({
   baseURL: "https://api.x.ai/v1", 
   apiKey: process.env.XAI_API_KEY || "" 
 });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
 
 export interface ContentSuggestion {
   suggestion: 'image' | 'video';
@@ -20,6 +22,12 @@ export interface GeneratedContent {
   linkedin_text: string;
   image_url?: string;
   video_url?: string;
+  model_selections?: {
+    blog_model: string;
+    linkedin_model: string;
+    image_model?: string;
+    video_model?: string;
+  };
 }
 
 export class AIServices {
@@ -63,14 +71,28 @@ Respond with JSON in this format:
     }
   }
 
-  async generateBlogText(updateText: string): Promise<string> {
+  async generateBlogText(updateText: string): Promise<{ text: string, model_used: string }> {
     try {
-      const response = await xai.chat.completions.create({
-        model: "grok-2-1212",
-        messages: [
-          {
-            role: "system",
-            content: `You are a skilled content writer. Transform founder updates into engaging blog posts.
+      // Analyze task to select best model
+      const task = await modelSelector.analyzeTask(
+        `Generate a professional blog post from this founder update: ${updateText}`,
+        { content_type: 'blog', style: 'professional' }
+      );
+      
+      const recommendation = await modelSelector.selectBestModel(task);
+      console.log(`Blog generation: Using ${recommendation.primary_model.model} - ${recommendation.reasoning}`);
+
+      // Use recommended model or fallback to xAI
+      const modelToUse = recommendation.primary_model.model;
+      
+      let response;
+      if (recommendation.primary_model.provider === 'xai') {
+        response = await xai.chat.completions.create({
+          model: modelToUse,
+          messages: [
+            {
+              role: "system",
+              content: `You are a skilled content writer. Transform founder updates into engaging blog posts.
 
 Guidelines:
 - Professional yet conversational tone
@@ -79,29 +101,69 @@ Guidelines:
 - 300-500 words
 - Focus on insights and implications
 - End with a forward-looking statement`
-          },
-          {
-            role: "user",
-            content: `Transform this founder update into a blog post: ${updateText}`
-          }
-        ]
-      });
+            },
+            {
+              role: "user",
+              content: `Transform this founder update into a blog post: ${updateText}`
+            }
+          ]
+        });
+      } else {
+        // Fallback to xAI if other models not available
+        response = await xai.chat.completions.create({
+          model: "grok-2-1212",
+          messages: [
+            {
+              role: "system",
+              content: `You are a skilled content writer. Transform founder updates into engaging blog posts.
 
-      return response.choices[0].message.content || '';
+Guidelines:
+- Professional yet conversational tone
+- Include relevant context and background
+- Structure with clear sections
+- 300-500 words
+- Focus on insights and implications
+- End with a forward-looking statement`
+            },
+            {
+              role: "user",
+              content: `Transform this founder update into a blog post: ${updateText}`
+            }
+          ]
+        });
+      }
+
+      return {
+        text: response.choices[0].message.content || '',
+        model_used: modelToUse
+      };
     } catch (error) {
       console.error('Error generating blog text:', error);
       throw new Error('Failed to generate blog text');
     }
   }
 
-  async generateLinkedInText(updateText: string): Promise<string> {
+  async generateLinkedInText(updateText: string): Promise<{ text: string, model_used: string }> {
     try {
-      const response = await xai.chat.completions.create({
-        model: "grok-2-1212",
-        messages: [
-          {
-            role: "system",
-            content: `You are a social media expert. Transform founder updates into engaging LinkedIn posts.
+      // Analyze task for LinkedIn content
+      const task = await modelSelector.analyzeTask(
+        `Generate a casual LinkedIn post from this founder update: ${updateText}`,
+        { content_type: 'social_media', style: 'casual', platform: 'linkedin' }
+      );
+      
+      const recommendation = await modelSelector.selectBestModel(task);
+      console.log(`LinkedIn generation: Using ${recommendation.primary_model.model} - ${recommendation.reasoning}`);
+
+      const modelToUse = recommendation.primary_model.model;
+      
+      let response;
+      if (recommendation.primary_model.provider === 'xai') {
+        response = await xai.chat.completions.create({
+          model: modelToUse,
+          messages: [
+            {
+              role: "system",
+              content: `You are a social media expert. Transform founder updates into engaging LinkedIn posts.
 
 Guidelines:
 - Casual, authentic tone
@@ -110,23 +172,61 @@ Guidelines:
 - Start with a hook
 - Include a call-to-action or question
 - Use emojis sparingly but effectively`
-          },
-          {
-            role: "user",
-            content: `Transform this founder update into a LinkedIn post: ${updateText}`
-          }
-        ]
-      });
+            },
+            {
+              role: "user",
+              content: `Transform this founder update into a LinkedIn post: ${updateText}`
+            }
+          ]
+        });
+      } else {
+        // Fallback to xAI
+        response = await xai.chat.completions.create({
+          model: "grok-2-1212",
+          messages: [
+            {
+              role: "system",
+              content: `You are a social media expert. Transform founder updates into engaging LinkedIn posts.
 
-      return response.choices[0].message.content || '';
+Guidelines:
+- Casual, authentic tone
+- 150-250 words maximum
+- Include relevant hashtags
+- Start with a hook
+- Include a call-to-action or question
+- Use emojis sparingly but effectively`
+            },
+            {
+              role: "user",
+              content: `Transform this founder update into a LinkedIn post: ${updateText}`
+            }
+          ]
+        });
+      }
+
+      return {
+        text: response.choices[0].message.content || '',
+        model_used: modelToUse
+      };
     } catch (error) {
       console.error('Error generating LinkedIn text:', error);
       throw new Error('Failed to generate LinkedIn text');
     }
   }
 
-  async generateInfographicImage(updateText: string): Promise<string> {
+  async generateInfographicImage(updateText: string): Promise<{ url: string, model_used: string }> {
     try {
+      // Analyze task for image generation
+      const task = await modelSelector.analyzeTask(
+        `Generate a professional infographic from this founder update: ${updateText}`,
+        { content_type: 'infographic', style: 'professional' }
+      );
+      
+      const recommendation = await modelSelector.selectBestModel(task);
+      console.log(`Image generation: Using ${recommendation.primary_model.model} - ${recommendation.reasoning}`);
+
+      const modelToUse = recommendation.primary_model.model;
+      
       const prompt = `Create a clean, professional infographic-style image based on this founder update: ${updateText}
 
 Style requirements:
@@ -137,42 +237,88 @@ Style requirements:
 - Suitable for business/startup context
 - High contrast for readability`;
 
-      const response = await gemini.models.generateContent({
-        model: "gemini-2.0-flash-preview-image-generation",
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        config: {
-          responseModalities: [Modality.TEXT, Modality.IMAGE],
-        },
-      });
+      if (recommendation.primary_model.provider === 'gemini') {
+        const response = await gemini.models.generateContent({
+          model: modelToUse,
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          config: {
+            responseModalities: [Modality.TEXT, Modality.IMAGE],
+          },
+        });
 
-      const candidates = response.candidates;
-      if (!candidates || candidates.length === 0) {
-        throw new Error('No image generated');
-      }
+        const candidates = response.candidates;
+        if (!candidates || candidates.length === 0) {
+          throw new Error('No image generated');
+        }
 
-      const content = candidates[0].content;
-      if (!content || !content.parts) {
-        throw new Error('No content parts found');
-      }
+        const content = candidates[0].content;
+        if (!content || !content.parts) {
+          throw new Error('No content parts found');
+        }
 
-      for (const part of content.parts) {
-        if (part.inlineData && part.inlineData.data) {
-          // Create uploads directory if it doesn't exist
-          const uploadsDir = path.join(process.cwd(), 'uploads');
-          if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
+        for (const part of content.parts) {
+          if (part.inlineData && part.inlineData.data) {
+            // Create uploads directory if it doesn't exist
+            const uploadsDir = path.join(process.cwd(), 'uploads');
+            if (!fs.existsSync(uploadsDir)) {
+              fs.mkdirSync(uploadsDir, { recursive: true });
+            }
+
+            // Generate unique filename
+            const filename = `infographic_${Date.now()}.png`;
+            const filepath = path.join(uploadsDir, filename);
+            
+            // Save image
+            const imageData = Buffer.from(part.inlineData.data, "base64");
+            fs.writeFileSync(filepath, imageData);
+            
+            return {
+              url: `/uploads/${filename}`,
+              model_used: modelToUse
+            };
           }
+        }
+      } else {
+        // Fallback to Gemini
+        const response = await gemini.models.generateContent({
+          model: "gemini-2.0-flash-preview-image-generation",
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          config: {
+            responseModalities: [Modality.TEXT, Modality.IMAGE],
+          },
+        });
 
-          // Generate unique filename
-          const filename = `infographic_${Date.now()}.png`;
-          const filepath = path.join(uploadsDir, filename);
-          
-          // Save image
-          const imageData = Buffer.from(part.inlineData.data, "base64");
-          fs.writeFileSync(filepath, imageData);
-          
-          // Return URL path
-          return `/uploads/${filename}`;
+        const candidates = response.candidates;
+        if (!candidates || candidates.length === 0) {
+          throw new Error('No image generated');
+        }
+
+        const content = candidates[0].content;
+        if (!content || !content.parts) {
+          throw new Error('No content parts found');
+        }
+
+        for (const part of content.parts) {
+          if (part.inlineData && part.inlineData.data) {
+            // Create uploads directory if it doesn't exist
+            const uploadsDir = path.join(process.cwd(), 'uploads');
+            if (!fs.existsSync(uploadsDir)) {
+              fs.mkdirSync(uploadsDir, { recursive: true });
+            }
+
+            // Generate unique filename
+            const filename = `infographic_${Date.now()}.png`;
+            const filepath = path.join(uploadsDir, filename);
+            
+            // Save image
+            const imageData = Buffer.from(part.inlineData.data, "base64");
+            fs.writeFileSync(filepath, imageData);
+            
+            return {
+              url: `/uploads/${filename}`,
+              model_used: "gemini-2.0-flash-preview-image-generation"
+            };
+          }
         }
       }
 
@@ -183,16 +329,27 @@ Style requirements:
     }
   }
 
-  async generateExplainerVideo(updateText: string): Promise<string> {
-    // Note: Runway ML API integration would go here
-    // For MVP, we'll return a placeholder since Runway ML API is not yet publicly available
+  async generateExplainerVideo(updateText: string): Promise<{ url: string, model_used: string }> {
     try {
+      // Analyze task for video generation
+      const task = await modelSelector.analyzeTask(
+        `Generate an explainer video from this founder update: ${updateText}`,
+        { content_type: 'video', style: 'professional' }
+      );
+      
+      const recommendation = await modelSelector.selectBestModel(task);
+      console.log(`Video generation: Using ${recommendation.primary_model.model} - ${recommendation.reasoning}`);
+
       console.log('Generating explainer video for:', updateText);
       
-      // Placeholder implementation
+      // Note: Runway ML API integration would go here
+      // For MVP, we'll return a placeholder since Runway ML API is not yet publicly available
       // In a real implementation, this would call Runway ML API
-      // For now, return a placeholder URL
-      return '/placeholder-video.mp4';
+      
+      return {
+        url: '/placeholder-video.mp4',
+        model_used: recommendation.primary_model.model
+      };
     } catch (error) {
       console.error('Error generating explainer video:', error);
       throw new Error('Failed to generate explainer video');
@@ -202,21 +359,33 @@ Style requirements:
   async generateContent(updateText: string, contentChoice: 'image' | 'video'): Promise<GeneratedContent> {
     try {
       // Generate text content in parallel
-      const [blogText, linkedinText] = await Promise.all([
+      const [blogResult, linkedinResult] = await Promise.all([
         this.generateBlogText(updateText),
         this.generateLinkedInText(updateText)
       ]);
 
       const result: GeneratedContent = {
-        blog_text: blogText,
-        linkedin_text: linkedinText
+        blog_text: blogResult.text,
+        linkedin_text: linkedinResult.text,
+        model_selections: {
+          blog_model: blogResult.model_used,
+          linkedin_model: linkedinResult.model_used
+        }
       };
 
       // Generate visual content based on choice
       if (contentChoice === 'image') {
-        result.image_url = await this.generateInfographicImage(updateText);
+        const imageResult = await this.generateInfographicImage(updateText);
+        result.image_url = imageResult.url;
+        if (result.model_selections) {
+          result.model_selections.image_model = imageResult.model_used;
+        }
       } else if (contentChoice === 'video') {
-        result.video_url = await this.generateExplainerVideo(updateText);
+        const videoResult = await this.generateExplainerVideo(updateText);
+        result.video_url = videoResult.url;
+        if (result.model_selections) {
+          result.model_selections.video_model = videoResult.model_used;
+        }
       }
 
       return result;
