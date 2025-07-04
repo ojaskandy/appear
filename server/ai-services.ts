@@ -451,6 +451,69 @@ Video style requirements:
     }
   }
 
+  async generateTavusVideo(updateText: string): Promise<{ url: string }> {
+    try {
+      const response = await fetch('https://api.tavus.io/v2/videos', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.TAVUS_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          script: updateText,
+          replica_id: 'default', // You can customize this later
+          background_url: null,
+          video_name: `Founder Update - ${new Date().toISOString()}`
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Tavus API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return { url: data.video_url || '/placeholder-tavus-processing.mp4' };
+    } catch (error) {
+      console.error('Tavus video generation failed:', error);
+      throw error;
+    }
+  }
+
+  async generateCreatomateVideo(updateText: string): Promise<{ url: string }> {
+    try {
+      const url = 'https://api.creatomate.com/v1/renders';
+      const apiKey = process.env.CREATOMATE_API_KEY;
+
+      const data = {
+        "template_id": "230d30ab-7e5e-4d2c-871e-aaf8a4af8f90",
+        "modifications": {
+          "Video.source": "https://creatomate.com/files/assets/7347c3b7-e1a8-4439-96f1-f3dfc95c3d28",
+          "Text-1.text": updateText,
+          "Text-2.text": "Founder Update\n[size 150%]Announcement[/size]"
+        }
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Creatomate API error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return { url: result[0]?.url || '/placeholder-creatomate-processing.mp4' };
+    } catch (error) {
+      console.error('Creatomate video generation failed:', error);
+      throw error;
+    }
+  }
+
   async generateHeyGenVideo(updateText: string): Promise<{ url: string }> {
     try {
       console.log('Starting HeyGen V2 video generation...');

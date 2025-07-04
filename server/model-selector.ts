@@ -8,7 +8,7 @@ const xai = new OpenAI({
 
 export interface ModelCapability {
   model: string;
-  provider: 'xai' | 'gemini' | 'openai' | 'anthropic' | 'runway' | 'stability' | 'midjourney';
+  provider: 'xai' | 'gemini' | 'openai' | 'anthropic' | 'runway' | 'stability' | 'midjourney' | 'tavus' | 'creatomate';
   strengths: string[];
   use_cases: string[];
   quality_score: number; // 1-10
@@ -90,6 +90,20 @@ const MODEL_DATABASE: ModelCapability[] = [
     strengths: ["cinematic_video", "realistic_motion", "text_overlays", "professional_quality"],
     use_cases: ["explainer_videos", "product_demos", "cinematic_content", "marketing_videos"],
     quality_score: 9
+  },
+  {
+    model: "tavus-phoenix",
+    provider: "tavus",
+    strengths: ["ai_avatars", "personalized_video", "multilingual", "realistic_speech"],
+    use_cases: ["avatar_videos", "personalized_content", "training_videos", "announcements"],
+    quality_score: 8
+  },
+  {
+    model: "creatomate-template",
+    provider: "creatomate",
+    strengths: ["template_based", "automation", "text_animation", "brand_consistency"],
+    use_cases: ["social_media_videos", "automated_content", "branded_videos", "text_animations"],
+    quality_score: 8
   }
 ];
 

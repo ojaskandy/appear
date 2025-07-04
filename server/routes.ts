@@ -71,7 +71,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gemini: !!process.env.GEMINI_API_KEY,
           openai: !!process.env.OPENAI_API_KEY,
           anthropic: !!process.env.ANTHROPIC_API_KEY,
-          runway: !!process.env.RUNWAY_API_KEY
+          runway: !!process.env.RUNWAY_API_KEY,
+          tavus: !!process.env.TAVUS_API_KEY,
+          creatomate: !!process.env.CREATOMATE_API_KEY
         }
       });
     } catch (error) {

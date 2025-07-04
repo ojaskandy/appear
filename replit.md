@@ -110,3 +110,6 @@ Changelog:
 - Implemented HeyGen V2 API for professional avatar video generation
 - Modernized UI with cleaner, minimal design and fewer words
 - Added async video processing for better user experience
+- Integrated Tavus API for AI avatar video generation with personalized content
+- Added Creatomate API for template-based video automation and branded content
+- Enhanced model selection with 9 total AI providers including video generation specialists

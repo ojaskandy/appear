@@ -27,6 +27,8 @@ const MODEL_OPTIONS = [
   { value: 'gemini-2.0-flash-preview-image-generation', label: 'Gemini 2.0 Flash', description: 'Google\'s latest model' },
   { value: 'runway-gen-3', label: 'Runway Gen-3', description: 'Advanced video generation' },
   { value: 'heygen-v2', label: 'HeyGen V2', description: 'Professional avatar videos' },
+  { value: 'tavus-phoenix', label: 'Tavus Phoenix', description: 'AI avatar video generation' },
+  { value: 'creatomate-template', label: 'Creatomate Template', description: 'Template-based video automation' },
 ];
 
 export default function Home() {
@@ -147,9 +149,17 @@ export default function Home() {
     // If user selected a specific model, skip suggestion and generate directly
     if (selectedModel !== 'best') {
       // Determine content type based on selected model
-      const isVideoModel = ['runway-gen-3', 'heygen-v2'].includes(selectedModel);
-      const contentChoice = isVideoModel ? 'video' : 'image';
-      await handleGenerate(contentChoice);
+      const videoModels = ['runway-gen-3', 'heygen-v2', 'tavus-phoenix', 'creatomate-template'];
+      const imageModels = ['gemini-2.0-flash-preview-image-generation'];
+      
+      if (videoModels.includes(selectedModel)) {
+        await handleGenerate('video');
+      } else if (imageModels.includes(selectedModel)) {
+        await handleGenerate('image');
+      } else {
+        // For text-only models, still use the analyze flow to determine image/video
+        await handleAnalyze();
+      }
     } else {
       // Use the existing analyze flow
       await handleAnalyze();
