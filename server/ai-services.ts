@@ -34,8 +34,8 @@ export interface GeneratedContent {
   image_url?: string;
   video_url?: string;
   model_selections?: {
-    blog_model: string;
-    linkedin_model: string;
+    blog_model?: string;
+    linkedin_model?: string;
     image_model?: string;
     video_model?: string;
   };
@@ -619,29 +619,21 @@ Video style requirements:
     }
   }
 
-  async generateContent(updateText: string, contentChoice: 'image' | 'video', selectedModel?: string): Promise<GeneratedContent> {
+  async generateContent(updateText: string, contentChoice: 'image' | 'video' | 'blog' | 'linkedin', selectedModel?: string): Promise<GeneratedContent> {
     try {
       // If user selected a specific model, add it to the context
       if (selectedModel && selectedModel !== 'best') {
         console.log(`User selected model: ${selectedModel}`);
       }
       
-      // Generate text content in parallel
-      const [blogResult, linkedinResult] = await Promise.all([
-        this.generateBlogText(updateText),
-        this.generateLinkedInText(updateText)
-      ]);
-
+      // Initialize result with empty content
       const result: GeneratedContent = {
-        blog_text: blogResult.text,
-        linkedin_text: linkedinResult.text,
-        model_selections: {
-          blog_model: blogResult.model_used,
-          linkedin_model: linkedinResult.model_used
-        }
+        blog_text: '',
+        linkedin_text: '',
+        model_selections: {}
       };
 
-      // Generate visual content based on choice
+      // Generate content based on choice
       if (contentChoice === 'image') {
         const imageResult = await this.generateInfographicImage(updateText);
         result.image_url = imageResult.url;
@@ -653,6 +645,18 @@ Video style requirements:
         result.video_url = videoResult.url;
         if (result.model_selections) {
           result.model_selections.video_model = videoResult.model_used;
+        }
+      } else if (contentChoice === 'blog') {
+        const blogResult = await this.generateBlogText(updateText);
+        result.blog_text = blogResult.text;
+        if (result.model_selections) {
+          result.model_selections.blog_model = blogResult.model_used;
+        }
+      } else if (contentChoice === 'linkedin') {
+        const linkedinResult = await this.generateLinkedInText(updateText);
+        result.linkedin_text = linkedinResult.text;
+        if (result.model_selections) {
+          result.model_selections.linkedin_model = linkedinResult.model_used;
         }
       }
 

@@ -41,9 +41,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      if (!content_choice || !['image', 'video'].includes(content_choice)) {
+      if (!content_choice || !['image', 'video', 'blog', 'linkedin'].includes(content_choice)) {
         return res.status(400).json({ 
-          error: "content_choice must be 'image' or 'video'" 
+          error: "content_choice must be 'image', 'video', 'blog', or 'linkedin'" 
         });
       }
 

@@ -59,7 +59,7 @@ export default function Home() {
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedChoice, setSelectedChoice] = useState<'image' | 'video' | null>(null);
+  const [selectedChoice, setSelectedChoice] = useState<'image' | 'video' | 'blog' | 'linkedin' | null>(null);
   const [selectedModel, setSelectedModel] = useState('best');
   
   const { toast } = useToast();
@@ -103,7 +103,7 @@ export default function Home() {
     }
   };
 
-  const handleGenerate = async (choice?: 'image' | 'video') => {
+  const handleGenerate = async (choice?: 'image' | 'video' | 'blog' | 'linkedin') => {
     const contentChoice = choice || selectedChoice;
     
     if (!contentChoice) {
@@ -317,21 +317,45 @@ export default function Home() {
 
               {/* Quick Actions */}
               <div className="flex justify-center mt-6 space-x-2">
-                <Button variant="outline" size="sm" className="bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate Content
-                </Button>
-                <Button variant="outline" size="sm" className="bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800"
+                  onClick={() => handleGenerate('image')}
+                  disabled={isAnalyzing || isGenerating || !updateText.trim()}
+                >
                   <Image className="w-4 h-4 mr-2" />
                   Create Visual
                 </Button>
-                <Button variant="outline" size="sm" className="bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800"
+                  onClick={() => handleGenerate('video')}
+                  disabled={isAnalyzing || isGenerating || !updateText.trim()}
+                >
                   <Video className="w-4 h-4 mr-2" />
                   Make Video
                 </Button>
-                <Button variant="outline" size="sm" className="bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800"
+                  onClick={() => handleGenerate('blog')}
+                  disabled={isAnalyzing || isGenerating || !updateText.trim()}
+                >
                   <FileText className="w-4 h-4 mr-2" />
                   Blog Post
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="bg-transparent border-gray-700 text-gray-400 hover:bg-gray-800"
+                  onClick={() => handleGenerate('linkedin')}
+                  disabled={isAnalyzing || isGenerating || !updateText.trim()}
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  LinkedIn Post
                 </Button>
               </div>
             </div>
