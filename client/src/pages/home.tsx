@@ -16,6 +16,7 @@ interface GeneratedContent {
   linkedin_text: string;
   image_url?: string;
   video_url?: string;
+  credit_warning?: string;
 }
 
 interface ModelOption {
@@ -149,11 +150,21 @@ export default function Home() {
 
       const data = await response.json();
       setGeneratedContent(data);
-      toast({
-        title: "Success",
-        description: "Content generated successfully!",
-        variant: "default"
-      });
+      
+      // Show credit warning if present
+      if (data.credit_warning) {
+        toast({
+          title: "Credit Usage Warning",
+          description: data.credit_warning,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Content generated successfully!",
+          variant: "default"
+        });
+      }
     } catch (error) {
       console.error('Error generating content:', error);
       toast({

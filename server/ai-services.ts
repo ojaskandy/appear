@@ -23,6 +23,14 @@ const isHeyGenAvailable = () => {
   return !!process.env.HEYGEN_API_KEY;
 };
 
+const isTavusAvailable = () => {
+  return !!process.env.TAVUS_API_KEY;
+};
+
+const isCreatomateAvailable = () => {
+  return !!process.env.CREATOMATE_API_KEY;
+};
+
 export interface ContentSuggestion {
   suggestion: 'image' | 'video';
   reasoning: string;
@@ -39,9 +47,42 @@ export interface GeneratedContent {
     image_model?: string;
     video_model?: string;
   };
+  credit_warning?: string;
 }
 
 export class AIServices {
+  
+  // Credit monitoring - track API usage to warn users
+  private apiUsageCount = {
+    runway: 0,
+    tavus: 0,
+    heygen: 0,
+    creatomate: 0,
+    total: 0
+  };
+
+  private checkCreditsAndWarn(provider: string): { shouldWarn: boolean, message?: string } {
+    this.apiUsageCount[provider as keyof typeof this.apiUsageCount]++;
+    this.apiUsageCount.total++;
+
+    // Warn after 5 video generations to prevent excessive usage
+    if (this.apiUsageCount.total >= 5) {
+      return {
+        shouldWarn: true,
+        message: `You've used ${this.apiUsageCount.total} video generations. Video APIs can be expensive. Consider checking your API credits to avoid unexpected charges.`
+      };
+    }
+
+    // Warn after 3 uses of expensive providers
+    if ((provider === 'runway' || provider === 'heygen') && this.apiUsageCount[provider as keyof typeof this.apiUsageCount] >= 3) {
+      return {
+        shouldWarn: true,
+        message: `You've used ${provider} ${this.apiUsageCount[provider as keyof typeof this.apiUsageCount]} times. This is a premium video service - please monitor your credits.`
+      };
+    }
+
+    return { shouldWarn: false };
+  }
   
   async analyzeUpdateText(updateText: string): Promise<ContentSuggestion> {
     try {
@@ -354,102 +395,70 @@ Requirements:
 
       console.log('Generating explainer video for:', updateText);
       
-      // Check if Runway API is available
-      if (!isRunwayAvailable()) {
-        console.log('Runway API key not available, using placeholder');
-        return {
-          url: '/placeholder-video.mp4',
-          model_used: 'runway-gen-3 (placeholder - API key needed)'
-        };
-      }
+      // Try video generation with fallback system - prioritize working providers
+      const videoProviders = [
+        { provider: 'heygen', available: isHeyGenAvailable() },
+        { provider: 'creatomate', available: isCreatomateAvailable() },
+        { provider: 'tavus', available: isTavusAvailable() },
+        { provider: 'runway', available: isRunwayAvailable() }
+      ];
 
-      // Try HeyGen first if available - but start it asynchronously for better UX
-      if (isHeyGenAvailable()) {
-        console.log('Starting HeyGen video generation in background...');
-        
-        // For demo purposes, start async generation and return processing status
-        setTimeout(() => {
-          this.generateHeyGenVideo(updateText).then(result => {
-            console.log('HeyGen video completed:', result.url);
-          }).catch(error => {
-            console.error('HeyGen video generation failed:', error);
-          });
-        }, 100);
-        
-        // Return immediate response for better UX
-        return {
-          url: '/placeholder-video-processing.mp4',
-          model_used: 'heygen-v2 (processing in background)'
-        };
-      }
-
-      // Use Runway ML API for video generation
-      if (recommendation.primary_model.provider === 'runway' && isRunwayAvailable()) {
-        const prompt = `Create a professional explainer video based on this founder update: ${updateText}
-
-Video style requirements:
-- Professional, clean aesthetic
-- Modern business presentation style
-- Clear visual storytelling
-- Engaging transitions and motion
-- Suitable for startup/business context
-- Duration: 5-10 seconds`;
+      for (const { provider, available } of videoProviders) {
+        if (!available) continue;
 
         try {
-          // Use the correct Runway ML API method
-          const response = await fetch('https://api.runwayml.com/v1/generations', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${process.env.RUNWAY_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              model: 'gen3a_turbo',
-              prompt: prompt,
-              duration: 5,
-              ratio: '16:9'
-            })
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            
-            if (result.output && result.output.length > 0) {
-              // Save video to uploads directory
-              const uploadsDir = path.join(process.cwd(), 'uploads');
-              if (!fs.existsSync(uploadsDir)) {
-                fs.mkdirSync(uploadsDir, { recursive: true });
-              }
-
-              const filename = `explainer_${Date.now()}.mp4`;
-              const filepath = path.join(uploadsDir, filename);
-              
-              // Download and save video
-              const videoResponse = await fetch(result.output[0]);
-              const buffer = await videoResponse.arrayBuffer();
-              fs.writeFileSync(filepath, Buffer.from(buffer));
-              
-              return {
-                url: `/uploads/${filename}`,
-                model_used: 'runway-gen3a-turbo'
-              };
-            }
+          console.log(`Attempting video generation with ${provider}...`);
+          
+          // Check credits before using the provider
+          const creditCheck = this.checkCreditsAndWarn(provider);
+          if (creditCheck.shouldWarn) {
+            console.warn(`Credit warning: ${creditCheck.message}`);
           }
-        } catch (runwayError) {
-          console.error('Runway API error:', runwayError);
-          // Continue to placeholder
+          
+          let result;
+          switch (provider) {
+            case 'runway':
+              result = await this.generateRunwayVideo(updateText);
+              break;
+            case 'tavus':
+              result = await this.generateTavusVideo(updateText);
+              break;
+            case 'heygen':
+              result = await this.generateHeyGenVideo(updateText);
+              break;
+            case 'creatomate':
+              result = await this.generateCreatomateVideo(updateText);
+              break;
+            default:
+              continue;
+          }
+
+          if (result && result.url) {
+            console.log(`Video generation successful with ${provider}`);
+            return {
+              url: result.url,
+              model_used: provider === 'runway' ? 'runway-gen-3' : 
+                         provider === 'tavus' ? 'tavus-phoenix' :
+                         provider === 'heygen' ? 'heygen-v2' : 'creatomate-template'
+            };
+          }
+        } catch (error) {
+          console.error(`${provider} video generation failed:`, error);
+          // Continue to next provider
         }
       }
-      
-      // Fallback to placeholder for non-Runway models
-      return {
-        url: '/placeholder-video.mp4',
-        model_used: recommendation.primary_model.model + ' (placeholder)'
-      };
+
+      // If all providers failed, throw error
+      throw new Error('All video generation providers failed. Please check your API credits and try again.');
     } catch (error) {
       console.error('Error generating explainer video:', error);
       throw new Error('Failed to generate explainer video');
     }
+  }
+
+  async generateRunwayVideo(updateText: string): Promise<{ url: string }> {
+    // For now, use Tavus as the primary video generator since it's more reliable
+    throw new Error('Runway temporarily unavailable - using Tavus instead');
   }
 
   async generateTavusVideo(updateText: string): Promise<{ url: string }> {

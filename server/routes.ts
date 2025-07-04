@@ -49,6 +49,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const content = await aiServices.generateContent(update_text, content_choice, selected_model);
       
+      // Check if we should send credit warnings
+      const totalUsage = (aiServices as any).apiUsageCount?.total || 0;
+      if (totalUsage >= 5) {
+        content.credit_warning = `You've used ${totalUsage} video generations. Video APIs can be expensive. Consider checking your API credits to avoid unexpected charges.`;
+      }
+      
       res.json(content);
     } catch (error) {
       console.error('Error in /generate:', error);
