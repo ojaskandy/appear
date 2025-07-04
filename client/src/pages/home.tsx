@@ -521,17 +521,18 @@ export default function Home() {
                       </div>
                       <div>
                         <h3 className="text-white font-medium">Generated Video</h3>
-                        <p className="text-gray-400 text-sm">Ready for Runway ML</p>
+                        <p className="text-gray-400 text-sm">Created with HeyGen AI</p>
                       </div>
                     </div>
-                    <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg p-8 text-center">
-                      <Video className="w-16 h-16 mx-auto mb-4 text-gray-500" />
-                      <p className="text-gray-400">
-                        Video placeholder - Runway ML integration ready
-                      </p>
-                      <p className="text-sm text-gray-500 mt-2">
-                        URL: {generatedContent.video_url}
-                      </p>
+                    <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg p-4">
+                      <video 
+                        src={generatedContent.video_url} 
+                        controls
+                        className="w-full max-w-2xl mx-auto rounded-lg"
+                        style={{ maxHeight: '500px' }}
+                      >
+                        Your browser does not support the video tag.
+                      </video>
                     </div>
                   </div>
                 )}
