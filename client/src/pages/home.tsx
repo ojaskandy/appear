@@ -18,18 +18,40 @@ interface GeneratedContent {
   video_url?: string;
 }
 
-// Model options matching Perplexity's aesthetic
-const MODEL_OPTIONS = [
-  { value: 'best', label: 'Best', description: 'Selects the best model for each task' },
-  { value: 'grok-2-1212', label: 'Grok 2', description: 'xAI\'s advanced reasoning model' },
-  { value: 'claude-3-5-sonnet', label: 'Claude 3.5 Sonnet', description: 'Anthropic\'s advanced model' },
-  { value: 'gpt-4o', label: 'GPT-4o', description: 'OpenAI\'s advanced model' },
-  { value: 'gemini-2.0-flash-preview-image-generation', label: 'Gemini 2.0 Flash', description: 'Google\'s latest model' },
-  { value: 'runway-gen-3', label: 'Runway Gen-3', description: 'Advanced video generation' },
-  { value: 'heygen-v2', label: 'HeyGen V2', description: 'Professional avatar videos' },
-  { value: 'tavus-phoenix', label: 'Tavus Phoenix', description: 'AI avatar video generation' },
-  { value: 'creatomate-template', label: 'Creatomate Template', description: 'Template-based video automation' },
-];
+interface ModelOption {
+  value: string;
+  label: string;
+  description: string;
+}
+
+// Model options organized by capability
+const MODEL_OPTIONS: {
+  general: ModelOption[];
+  text: ModelOption[];
+  image: ModelOption[];
+  video: ModelOption[];
+} = {
+  general: [
+    { value: 'best', label: 'Best', description: 'Selects the best model for each task' },
+  ],
+  text: [
+    { value: 'grok-2-1212', label: 'Grok 2', description: 'xAI\'s advanced reasoning model' },
+    { value: 'claude-3-5-sonnet', label: 'Claude 3.5 Sonnet', description: 'Anthropic\'s advanced model' },
+    { value: 'gpt-4o', label: 'GPT-4o', description: 'OpenAI\'s advanced model' },
+  ],
+  image: [
+    { value: 'gemini-2.0-flash-preview-image-generation', label: 'Gemini 2.0 Flash', description: 'Google\'s latest model' },
+    { value: 'dall-e-3', label: 'DALL-E 3', description: 'OpenAI\'s image generation' },
+    { value: 'midjourney-v6', label: 'Midjourney V6', description: 'High-quality artistic images' },
+    { value: 'stable-diffusion-xl', label: 'Stable Diffusion XL', description: 'Customizable image generation' },
+  ],
+  video: [
+    { value: 'runway-gen-3', label: 'Runway Gen-3', description: 'Advanced video generation' },
+    { value: 'heygen-v2', label: 'HeyGen V2', description: 'Professional avatar videos' },
+    { value: 'tavus-phoenix', label: 'Tavus Phoenix', description: 'AI avatar video generation' },
+    { value: 'creatomate-template', label: 'Creatomate Template', description: 'Template-based video automation' },
+  ]
+};
 
 export default function Home() {
   const [updateText, setUpdateText] = useState('');
@@ -211,7 +233,50 @@ export default function Home() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#2a2a2a] border border-gray-700 text-white rounded-lg">
-                    {MODEL_OPTIONS.map((model) => (
+                    {/* General Options */}
+                    {MODEL_OPTIONS.general.map((model) => (
+                      <SelectItem
+                        key={model.value}
+                        value={model.value}
+                        className="text-white hover:bg-gray-700 focus:bg-gray-700"
+                      >
+                        {model.label}
+                      </SelectItem>
+                    ))}
+                    
+                    {/* Text Models */}
+                    <div className="px-2 py-1 text-xs text-gray-400 font-medium uppercase tracking-wider">
+                      Text Generation
+                    </div>
+                    {MODEL_OPTIONS.text.map((model) => (
+                      <SelectItem
+                        key={model.value}
+                        value={model.value}
+                        className="text-white hover:bg-gray-700 focus:bg-gray-700"
+                      >
+                        {model.label}
+                      </SelectItem>
+                    ))}
+                    
+                    {/* Image Models */}
+                    <div className="px-2 py-1 text-xs text-gray-400 font-medium uppercase tracking-wider">
+                      Image Generation
+                    </div>
+                    {MODEL_OPTIONS.image.map((model) => (
+                      <SelectItem
+                        key={model.value}
+                        value={model.value}
+                        className="text-white hover:bg-gray-700 focus:bg-gray-700"
+                      >
+                        {model.label}
+                      </SelectItem>
+                    ))}
+                    
+                    {/* Video Models */}
+                    <div className="px-2 py-1 text-xs text-gray-400 font-medium uppercase tracking-wider">
+                      Video Generation
+                    </div>
+                    {MODEL_OPTIONS.video.map((model) => (
                       <SelectItem
                         key={model.value}
                         value={model.value}
