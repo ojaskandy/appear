@@ -14,9 +14,13 @@ const xai = new OpenAI({
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
 const runway = new RunwayML({ apiKey: process.env.RUNWAY_API_KEY });
 
-// Check if Runway API is available
+// Check if video generation APIs are available
 const isRunwayAvailable = () => {
   return !!process.env.RUNWAY_API_KEY;
+};
+
+const isHeyGenAvailable = () => {
+  return !!process.env.HEYGEN_API_KEY;
 };
 
 export interface ContentSuggestion {
@@ -358,8 +362,22 @@ Style requirements:
         };
       }
 
+      // Try HeyGen first if available
+      if (isHeyGenAvailable()) {
+        try {
+          const heygenResult = await this.generateHeyGenVideo(updateText);
+          return {
+            url: heygenResult.url,
+            model_used: 'heygen-v2'
+          };
+        } catch (heygenError) {
+          console.error('HeyGen API error:', heygenError);
+          // Continue to try Runway if HeyGen fails
+        }
+      }
+
       // Use Runway ML API for video generation
-      if (recommendation.primary_model.provider === 'runway') {
+      if (recommendation.primary_model.provider === 'runway' && isRunwayAvailable()) {
         const prompt = `Create a professional explainer video based on this founder update: ${updateText}
 
 Video style requirements:
@@ -371,40 +389,48 @@ Video style requirements:
 - Duration: 5-10 seconds`;
 
         try {
-          const task = await runway.textToVideo.create({
-            model: 'gen3a_turbo',
-            promptText: prompt,
-            ratio: '16:9',
-            duration: 5
-          }).waitForTaskOutput();
+          // Use the correct Runway ML API method
+          const response = await fetch('https://api.runwayml.com/v1/generations', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${process.env.RUNWAY_API_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'gen3a_turbo',
+              prompt: prompt,
+              duration: 5,
+              ratio: '16:9'
+            })
+          });
 
-          if (task.output && task.output.length > 0) {
-            // Save video to uploads directory
-            const uploadsDir = path.join(process.cwd(), 'uploads');
-            if (!fs.existsSync(uploadsDir)) {
-              fs.mkdirSync(uploadsDir, { recursive: true });
+          if (response.ok) {
+            const result = await response.json();
+            
+            if (result.output && result.output.length > 0) {
+              // Save video to uploads directory
+              const uploadsDir = path.join(process.cwd(), 'uploads');
+              if (!fs.existsSync(uploadsDir)) {
+                fs.mkdirSync(uploadsDir, { recursive: true });
+              }
+
+              const filename = `explainer_${Date.now()}.mp4`;
+              const filepath = path.join(uploadsDir, filename);
+              
+              // Download and save video
+              const videoResponse = await fetch(result.output[0]);
+              const buffer = await videoResponse.arrayBuffer();
+              fs.writeFileSync(filepath, Buffer.from(buffer));
+              
+              return {
+                url: `/uploads/${filename}`,
+                model_used: 'runway-gen3a-turbo'
+              };
             }
-
-            const filename = `explainer_${Date.now()}.mp4`;
-            const filepath = path.join(uploadsDir, filename);
-            
-            // Download and save video
-            const response = await fetch(task.output[0]);
-            const buffer = await response.arrayBuffer();
-            fs.writeFileSync(filepath, Buffer.from(buffer));
-            
-            return {
-              url: `/uploads/${filename}`,
-              model_used: 'gen3a_turbo'
-            };
           }
         } catch (runwayError) {
           console.error('Runway API error:', runwayError);
-          // Fallback to placeholder
-          return {
-            url: '/placeholder-video.mp4',
-            model_used: 'runway-gen-3 (API error - check credits/permissions)'
-          };
+          // Continue to placeholder
         }
       }
       
@@ -416,6 +442,79 @@ Video style requirements:
     } catch (error) {
       console.error('Error generating explainer video:', error);
       throw new Error('Failed to generate explainer video');
+    }
+  }
+
+  async generateHeyGenVideo(updateText: string): Promise<{ url: string }> {
+    try {
+      // HeyGen API integration for text-to-video
+      const response = await fetch('https://api.heygen.com/v2/video/generate', {
+        method: 'POST',
+        headers: {
+          'X-API-Key': process.env.HEYGEN_API_KEY || '',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          video_inputs: [{
+            character: {
+              type: "avatar",
+              avatar_id: "default_avatar_business"
+            },
+            voice: {
+              type: "text",
+              input_text: `Here's an update from our founder: ${updateText}`,
+              voice_id: "professional_male_en"
+            }
+          }],
+          dimension: {
+            width: 1280,
+            height: 720
+          },
+          aspect_ratio: "16:9"
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        if (result.data && result.data.video_id) {
+          // Poll for video completion
+          const videoId = result.data.video_id;
+          let attempts = 0;
+          const maxAttempts = 30; // 5 minutes max wait
+          
+          while (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
+            
+            const statusResponse = await fetch(`https://api.heygen.com/v1/video_status.get?video_id=${videoId}`, {
+              headers: {
+                'X-API-Key': process.env.HEYGEN_API_KEY || ''
+              }
+            });
+            
+            if (statusResponse.ok) {
+              const statusResult = await statusResponse.json();
+              
+              if (statusResult.data && statusResult.data.status === 'completed') {
+                return {
+                  url: statusResult.data.video_url
+                };
+              } else if (statusResult.data && statusResult.data.status === 'failed') {
+                throw new Error('HeyGen video generation failed');
+              }
+            }
+            
+            attempts++;
+          }
+          
+          throw new Error('HeyGen video generation timeout');
+        }
+      }
+      
+      throw new Error('HeyGen API request failed');
+    } catch (error) {
+      console.error('HeyGen video generation error:', error);
+      throw error;
     }
   }
 

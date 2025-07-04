@@ -1,0 +1,147 @@
+Create Avatar Video (V2)
+post
+https://api.heygen.com/v2/video/generate
+This API now generates videos with our New AI Studio backend.
+
+Recent Requests
+time	status	user agent	
+Make a request to see history.
+0 Requests This Month
+
+Request Body
+Field	Type	Description
+caption	bool (optional)	Whether to add a caption to the video. Default is False. Only text input supports caption
+title	str (optional)	Title for the video.
+callback_id	str (optional)	A custom ID for callback purposes.
+video_inputs		List of video input settings (scenes). Must contain between 1 to 50 items. A video input describes the avatar, background, voice, and script, which together equals a 'scene'.
+dimension		The dimensions of the output video.
+folder_id	str (optional)	Allows them to specify the video output folder destination.
+callback_url	str(optional)	An optional callback url. This is useful if your callback endpoint is dynamic and each video have it's separate callback url.
+Using webhook endpoint is still recommended because those offers more customizations on the callback endpoint such as secrets, and event filtering, etc. If you use both (webhook and callback_url) events will be sent to both endpoints.
+VideoInput
+Field	Type	Description
+character	AvatarSettings or TalkingPhotoSettings (optional).
+Note: To use new AI-generated UGC Avatars in your videos, provide their Avatar ID in TalkingPhotoSettings, not AvatarSettings.	Character settings.
+voice	TextVoiceSettings or AudioVoiceSettings or SilenceVoiceSettings	Voice settings.
+background	ColorBackground or ImageBackground or VideoBackground (optional)	Background settings.
+Character Settings
+AvatarSettings
+Field	Type	Description
+type	Literal["avatar"]	Indicates that this is an avatar character setting.
+avatar_id	str	Avatar ID. Please note that this is NOT the Avatar Group ID; they are different.
+scale	float	Avatar scale, value between 0 and 5.0. Default is 1.0.
+Use the Avatar Positioning tool for easier adjustment.
+avatar_style	CharacterRenderType (optional)	Avatar style. Supported values are: circle, normal, closeUp.
+offset	Offset	Avatar offset. Default is { "x": 0.0, "y": 0.0 }.
+Use the Avatar Positioning tool for easier adjustment.
+matting	bool (optional)	Whether to do matting
+circle_background_color	str (optional)	background color in the circle when using circle style
+Note: Currently, background-removed custom avatars are not supported in the API.
+
+TalkingPhotoSettings
+Field	Type	Description
+type	Literal["talking_photo"]	Indicates that this is a talking photo character setting.
+talking_photo_id	str	Talking Photo ID.
+scale	float	Talking Photo scale, value between 0 and 2.0. Default is 1.0.
+Use the Avatar Positioning tool for easier adjustment.
+talking_photo_style	TACropStyle (optional)	Talking Photo crop style. Supported values are: square, circle.
+offset	Offset	Talking Photo offset.
+Default is { "x": 0.0, "y": 0.0 }.
+Use the Avatar Positioning tool for easier adjustment.
+talking_style	TPExpression	Talking Photo talking style. Default is TPExpression.stable. Supported values are: stable, expressive.
+expression	TPExpressionStyle	Talking Photo expression style. Default is TPExpressionStyle.default. Supported values are: default, happy.
+super_resolution	bool (optional)	Whether to enhance this photar image.
+matting	bool (optional)	Whether to do matting.
+circle_background_color	str (optional)	background color in the circle/square when using circle/square style
+Voice Settings
+TextVoiceSettings
+Field	Type	Description
+type	Literal["text"]	Indicates that this is a text voice setting.
+voice_id	str	Voice ID.
+input_text	str	Input text.
+speed	float (optional)	Voice speed, value between 0.5 and 1.5. Default is 1.
+pitch	int (optional)	Voice pitch, value between -50 and 50. Default is 0.
+emotion	str (optional)	Voice emotion, if voice support emotion. value are ['Excited','Friendly','Serious','Soothing','Broadcaster']
+locale	str (optional)	Allows to specify voice accents/locales for multilingual voices. (e.g., en-US, en-IN, pt-PT, pt-BR )
+elevenlabs_settings	ElevenLabsSettings object (optional)	ElevenLabs specific voice settings.
+ElevenLabsSettings:
+Field	Type	Description
+model	string	The ElevenLabs model to use. Valid options: eleven_monolingual_v1, eleven_multilingual_v1, eleven_multilingual_v2, eleven_turbo_v2, eleven_turbo_v2_5
+similarity_boost	float	Controls how similar the generated speech should be to the original voice. Range: 0.0 to 1.0
+stability	float	Controls the stability of the voice generation. Higher values result in more consistent and stable output. Range: 0.0 to 1.0
+style	float	Controls the style intensity of the generated speech. Range: 0.0 to 1.0
+AudioVoiceSettings
+Field	Type	Description
+type	Literal["audio"]	Indicates that this is an audio voice setting.
+audio_url	str (optional)	Audio URL.
+audio_asset_id	str (optional)	Audio asset ID. Either audio_url or audio_asset_id must be provided.
+SilenceVoiceSettings
+Field	Type	Description
+type	Literal["silence"]	Indicates that this is a silence voice setting.
+duration	float	Duration of silence, value between 1.0 and 100.0. Default is 1.0.
+Background Settings
+ColorBackground
+Field	Type	Description
+type	Literal["color"]	Indicates that this is a color background setting. Default is color.
+value	str	Color value in hex format. Default is #f6f6fc.
+ImageBackground
+Field	Type	Description
+type	Literal["image"]	Indicates that this is an image background setting.
+url	str (optional)	Image URL.
+image_asset_id	str (optional)	Image asset ID. Either url or image_asset_id must be provided.
+fit	str (optional)	Background image fit to the screen. Choose among cover , crop, contain and none. Default is cover
+VideoBackground
+Field	Type	Description
+type	Literal["video"]	Indicates that this is a video background setting.
+url	str (optional)	Video URL.
+video_asset_id	str (optional)	Video asset ID. Either url or video_asset_id must be provided.
+play_style	VideoPlayback	Video play style. Supported values are: fit_to_scene, freeze, loop, once. More Info
+fit	str (optional)	Background video fit to the screen. Choose among cover , crop, contain and none. Default is cover
+Response
+Field	Type	Description
+video_id	str	ID of the generated video.
+Body Params
+caption
+boolean
+Defaults to false
+Whether to enable captions in the video.
+
+
+false
+title
+string
+Title of this video
+
+callback_id
+string
+A custom data returned in the status/webhook payload for tracking.
+
+dimension
+object
+required
+Custom dimensions for the output video.
+
+
+dimension object
+video_inputs
+array of objects
+required
+
+ADD object
+folder_id
+string
+ID of the folder to save the video in.
+
+callback_url
+string
+The URL to notify when video rendering is complete. A POST request will be sent with video status info.
+
+Responses
+
+200
+200
+
+
+400
+400
+
