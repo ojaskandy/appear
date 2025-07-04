@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, Video, Image, CheckCircle, Sparkles, FileText, Share2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Search, Video, Image, CheckCircle, Sparkles, FileText, Share2, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ContentSuggestion {
@@ -17,6 +18,17 @@ interface GeneratedContent {
   video_url?: string;
 }
 
+// Model options matching Perplexity's aesthetic
+const MODEL_OPTIONS = [
+  { value: 'best', label: 'Best', description: 'Selects the best model for each task' },
+  { value: 'grok-2-1212', label: 'Grok 2', description: 'xAI\'s advanced reasoning model' },
+  { value: 'claude-3-5-sonnet', label: 'Claude 3.5 Sonnet', description: 'Anthropic\'s advanced model' },
+  { value: 'gpt-4o', label: 'GPT-4o', description: 'OpenAI\'s advanced model' },
+  { value: 'gemini-2.0-flash-preview-image-generation', label: 'Gemini 2.0 Flash', description: 'Google\'s latest model' },
+  { value: 'runway-gen-3', label: 'Runway Gen-3', description: 'Advanced video generation' },
+  { value: 'heygen-v2', label: 'HeyGen V2', description: 'Professional avatar videos' },
+];
+
 export default function Home() {
   const [updateText, setUpdateText] = useState('');
   const [suggestion, setSuggestion] = useState<ContentSuggestion | null>(null);
@@ -24,6 +36,7 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState<'image' | 'video' | null>(null);
+  const [selectedModel, setSelectedModel] = useState('best');
   
   const { toast } = useToast();
 
@@ -66,8 +79,10 @@ export default function Home() {
     }
   };
 
-  const handleGenerate = async () => {
-    if (!selectedChoice) {
+  const handleGenerate = async (choice?: 'image' | 'video') => {
+    const contentChoice = choice || selectedChoice;
+    
+    if (!contentChoice) {
       toast({
         title: "Error",
         description: "Please select a content type",
@@ -78,15 +93,22 @@ export default function Home() {
 
     setIsGenerating(true);
     try {
+      const requestBody: any = { 
+        update_text: updateText, 
+        content_choice: contentChoice 
+      };
+      
+      // If user selected a specific model, include it in the request
+      if (selectedModel !== 'best') {
+        requestBody.selected_model = selectedModel;
+      }
+      
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          update_text: updateText, 
-          content_choice: selectedChoice 
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -109,6 +131,28 @@ export default function Home() {
       });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleDirectGenerate = async () => {
+    if (!updateText.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter your founder update text",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // If user selected a specific model, skip suggestion and generate directly
+    if (selectedModel !== 'best') {
+      // Determine content type based on selected model
+      const isVideoModel = ['runway-gen-3', 'heygen-v2'].includes(selectedModel);
+      const contentChoice = isVideoModel ? 'video' : 'image';
+      await handleGenerate(contentChoice);
+    } else {
+      // Use the existing analyze flow
+      await handleAnalyze();
     }
   };
 
@@ -150,6 +194,26 @@ export default function Home() {
 
             {/* Input Section */}
             <div className="w-full max-w-3xl">
+              {/* Model Selection Dropdown */}
+              <div className="mb-4 flex justify-start">
+                <Select value={selectedModel} onValueChange={setSelectedModel}>
+                  <SelectTrigger className="w-auto min-w-[200px] bg-[#2a2a2a] border border-gray-700 text-white rounded-lg">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#2a2a2a] border border-gray-700 text-white rounded-lg">
+                    {MODEL_OPTIONS.map((model) => (
+                      <SelectItem
+                        key={model.value}
+                        value={model.value}
+                        className="text-white hover:bg-gray-700 focus:bg-gray-700"
+                      >
+                        {model.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <div className="relative">
                 <div className="bg-[#2a2a2a] border border-gray-700 rounded-xl overflow-hidden">
                   <Textarea
@@ -161,12 +225,12 @@ export default function Home() {
                   />
                   <div className="absolute right-3 bottom-3 flex items-center space-x-2">
                     <Button
-                      onClick={handleAnalyze}
+                      onClick={handleDirectGenerate}
                       disabled={isAnalyzing || isGenerating || !updateText.trim()}
                       size="sm"
                       className="bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg w-8 h-8 p-0"
                     >
-                      {isAnalyzing ? (
+                      {isAnalyzing || isGenerating ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
                         <Search className="w-4 h-4" />
@@ -240,7 +304,7 @@ export default function Home() {
                   </div>
                   
                   <Button 
-                    onClick={handleGenerate}
+                    onClick={() => handleGenerate()}
                     disabled={isGenerating || !selectedChoice}
                     className="w-full h-10 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-medium"
                   >

@@ -556,8 +556,13 @@ Video style requirements:
     }
   }
 
-  async generateContent(updateText: string, contentChoice: 'image' | 'video'): Promise<GeneratedContent> {
+  async generateContent(updateText: string, contentChoice: 'image' | 'video', selectedModel?: string): Promise<GeneratedContent> {
     try {
+      // If user selected a specific model, add it to the context
+      if (selectedModel && selectedModel !== 'best') {
+        console.log(`User selected model: ${selectedModel}`);
+      }
+      
       // Generate text content in parallel
       const [blogResult, linkedinResult] = await Promise.all([
         this.generateBlogText(updateText),

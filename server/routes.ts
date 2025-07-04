@@ -33,7 +33,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /generate - Generate content based on user choice
   app.post("/api/generate", async (req, res) => {
     try {
-      const { update_text, content_choice } = req.body;
+      const { update_text, content_choice, selected_model } = req.body;
       
       if (!update_text || typeof update_text !== 'string') {
         return res.status(400).json({ 
@@ -47,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const content = await aiServices.generateContent(update_text, content_choice);
+      const content = await aiServices.generateContent(update_text, content_choice, selected_model);
       
       res.json(content);
     } catch (error) {
