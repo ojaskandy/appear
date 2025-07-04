@@ -116,7 +116,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       timestamp: new Date().toISOString(),
       services: {
         gemini: !!process.env.GEMINI_API_KEY,
-        xai: !!process.env.XAI_API_KEY
+        xai: !!process.env.XAI_API_KEY,
+        openai: !!process.env.OPENAI_API_KEY,
+        runway: !!process.env.RUNWAY_API_KEY,
+        heygen: !!process.env.HEYGEN_API_KEY,
+        tavus: !!process.env.TAVUS_API_KEY,
+        creatomate: !!process.env.CREATOMATE_API_KEY
       }
     });
   });
