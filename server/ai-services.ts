@@ -229,8 +229,8 @@ Guidelines:
     try {
       // Analyze task for image generation
       const task = await modelSelector.analyzeTask(
-        `Generate a professional infographic from this founder update: ${updateText}`,
-        { content_type: 'infographic', style: 'professional' }
+        `Generate an image exactly as described in this text: ${updateText}`,
+        { content_type: 'image', style: 'creative' }
       );
       
       const recommendation = await modelSelector.selectBestModel(task);
@@ -238,15 +238,16 @@ Guidelines:
 
       const modelToUse = recommendation.primary_model.model;
       
-      const prompt = `Create a clean, professional infographic-style image based on this founder update: ${updateText}
+      // Generate exactly what the user describes, not just infographics
+      const prompt = `Create an image exactly as described in this text: ${updateText}
 
-Style requirements:
-- Modern, minimalist design
-- Professional color palette (blues, whites, grays)
-- Clear typography and visual hierarchy
-- Include key metrics, data points, or concepts
-- Suitable for business/startup context
-- High contrast for readability`;
+Generate the image following the user's description precisely. If no specific visual description is provided, create a relevant visual representation of the content mentioned.
+
+Requirements:
+- High quality and professional appearance
+- Follow the user's description exactly
+- If it's a business update, make it visually appealing for business context
+- If it's a specific scene or object, create that exactly`;
 
       if (recommendation.primary_model.provider === 'gemini') {
         const response = await gemini.models.generateContent({

@@ -24,6 +24,14 @@ interface ModelOption {
   description: string;
 }
 
+// Content options for user selection
+const CONTENT_OPTIONS = [
+  { value: 'image', label: 'Image', icon: Image, description: 'Generate visual content' },
+  { value: 'video', label: 'Video', icon: Video, description: 'Create video content' },
+  { value: 'blog', label: 'Blog Post', icon: FileText, description: 'Write blog content' },
+  { value: 'linkedin', label: 'LinkedIn Post', icon: Share2, description: 'Create social media post' },
+];
+
 // Model options organized by capability
 const MODEL_OPTIONS: {
   general: ModelOption[];
